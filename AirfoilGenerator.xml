@@ -1,0 +1,141 @@
+<extension version="2" minorversion="1" name="AirfoilGenerator">
+    <guid shortid="AirfoilGenerator">583F8FDB-5245-4CA9-8C0F-B5787ED80E74</guid>
+	<author>ANSYS Inc.</author>
+	<description>This Wizard generates an airfoil and does meshing. </description>
+
+	<script src="AirfoilGenerator.py" />
+	
+	<interface context="Project|Mechanical|SpaceClaim">
+	  <images>images</images>		
+	</interface>
+	
+	<wizard name="AirfoilGenerator" version="1" context="Project" icon="icon">
+	  <description>This Wizard generates an airfoil and does meshing.</description>
+	  
+	  <step name="Mode Selection" caption="Mode Selection" version="1" context="Project" helpFile="wizardhelp/helpstep1.html" >
+		<callbacks>
+		  <onupdate>CreateFluent</onupdate>
+		</callbacks>
+		<property name="2Dor3D" caption="Choose 2D or 3D mode" control="select" default="2D" >
+		  <attributes options="2D,3D" />
+		</property>
+	  </step>
+	  
+	  <step name="Geometry" caption="Geometry" version="1" context="SpaceClaim" helpFile="wizardhelp/helpstep2.html">
+		<callbacks>
+		  <onupdate>SetAirfoil</onupdate>
+	      <onreset>DeleteAirfoil</onreset>
+		</callbacks>
+		<property name="Naca" caption="Naca Code" control="string" >
+		  <callbacks>
+		    <onvalidate>NacaValidation</onvalidate>
+		  </callbacks>
+		</property>
+		<property name="Points" caption="Number of Points" control="integer" default="201" />
+		<propertygroup name="Cut Trailing" caption="Definition of Cut Trailing">
+		  <property name="CutTE" caption="Cut Trailing Edge" control="select" default="Yes">
+		    <attributes options="Yes,No" />
+		  </property>
+		  <property name="CutValue" caption="Value" control="float" default="1"> 
+		    <callbacks>
+		      <isvisible>ShowCutValue</isvisible>
+		    </callbacks>
+		  </property>
+		</propertygroup>
+		  <property name="Preview" caption="Preview Geometry" control="select" default="Delete">
+            <help> If you select "Show" option, you will be able to preview the geometry that you have created. 
+			       Select "Delete" option to delete it and to create another one.</help>		  
+		    <attributes options="Show,Delete" />
+		    <callbacks>
+		      <onvalidate>UpdateAirfoil</onvalidate>
+		    </callbacks>
+		  </property>
+	  </step>
+	  
+	  <step name="Extra Definitions" caption="Extra Geometry Definitions" version="1" context="SpaceClaim" helpFile="wizardhelp/helpstep3.html" >
+		<callbacks>
+		  <onupdate>SetScaleRotatePull</onupdate>
+		  <onreset>DeleteScaleRotatePull</onreset>
+		</callbacks>
+		<property name="Chord" caption="Chord" control="float" unit="Length" default="1 [m]" >
+		  <help> Parameter "Chord" should contain a non zero value.</help>
+		</property>
+		<property name="Angle" caption="Angle of Attack" control="float" default="0" >
+		  <help> Parameter "Angle" should contain a positive value less than 180.</help>
+		  <callbacks>
+		    <onvalidate>AngleOfAttackValidation</onvalidate>
+		  </callbacks>
+		</property>
+		<property name="WingSpan" caption="Wing Span" control="float" unit="Length" default="1 [m]" >
+		  <callbacks>
+		    <isvisible>ShowWingSpanValue</isvisible>
+		  </callbacks>
+		</property>
+		<property name="Preview2" caption="Preview Scale and Rotate" control="select" default="Delete">
+          <help> If you select "Show" option, you will be able to preview the scale and rotation that you have created. 
+			       Select "Delete" option to delete it.</help>		  
+		  <attributes options="Show,Delete" />
+		  <callbacks>
+		    <onvalidate>ScaleRotatePull</onvalidate>
+		  </callbacks>
+		</property>
+	  </step>
+	  
+	  <step name="SetDomain" caption="Set Domain/Enclosure" version="1" context="SpaceClaim" helpFile="wizardhelp/helpstep4.html" >
+	    <callbacks>
+		  <onupdate>SetDomainOrEnclosure</onupdate>
+		  <onreset>DeleteDomainOrEnclosure</onreset>
+		</callbacks>
+		<propertygroup name="2DDomain" caption="2D Domain">
+		  <callbacks>
+		    <isvisible>Show2dDomainValues</isvisible>
+		  </callbacks>
+		  <property name="RightX" caption="Downstream" control="float" unit="Length" default="2 [m]" />
+		  <property name="LeftX" caption="Upstream" control="float" unit="Length" default="-2 [m]" />
+		  <property name="UpY" caption="Up Y" control="float" unit="Length" default="2 [m]" />
+		  <property name="DownY" caption="Down Y" control="float" unit="Length" default="-2 [m]" />
+          <property name="Preview3" caption="Preview Domain" control="select" default="Delete">
+            <help> If you select "Show" option, you will be able to preview the Domain you have created. 
+			       Select "Delete" option to delete it.</help>		  
+		    <attributes options="Show,Delete" />
+		    <callbacks>
+		      <onvalidate>CreateDomain</onvalidate>
+		    </callbacks>
+		  </property>
+	    </propertygroup>
+		<propertygroup name="3DEnclosure" caption="3D Enclosure">
+		  <callbacks>
+		    <isvisible>Show3dEnclosureValues</isvisible>
+		  </callbacks>
+		  <property name="RX" caption="Downstream" control="float" unit="Length" default="0.25 [m]" />
+		  <property name="LX" caption="Upstream" control="float" unit="Length" default="0.25 [m]" />
+		  <property name="UY" caption="Up Y" control="float" unit="Length" default="0.25 [m]" />
+		  <property name="DY" caption="Down Y" control="float" unit="Length" default="0.25 [m]" />
+		  <property name="FZ" caption="Front Z" control="float" unit="Length" default="0.25 [m]"/>
+          <property name="Preview4" caption="Preview Domain" control="select" default="Delete" >
+            <help> If you select "Show" option, you will be able to preview the Enclosure you have created. 
+			       Select "Delete" option to delete it.</help>		  
+		    <attributes options="Show,Delete" />
+		    <callbacks>
+		      <onvalidate>CreateEnclosure</onvalidate>
+		    </callbacks>
+		  </property>
+	    </propertygroup>
+	  </step>
+	  
+	  <step name="Mesh" caption="Mesh and Flow Controls" version="1" context="Project" helpFile="wizardhelp/helpstep5.html" >
+		<callbacks>
+		  <onupdate>CreateMesh</onupdate>
+		</callbacks>
+		<propertygroup name="MeshControls" caption="Mesh Controls" >
+		  <property name="ElemSize" caption="Element Size" control="float" unit="Length" default="0.08 [m]" />
+		</propertygroup>
+		<propertygroup name="FlowControls" caption="Flow Controls" >
+		  <property name="Velocity" caption="Velocity" control="float" unit="Velocity" default="1.0 [m/s]" />
+		</propertygroup>
+	  </step>
+
+    </wizard>
+	
+</extension>
+		
